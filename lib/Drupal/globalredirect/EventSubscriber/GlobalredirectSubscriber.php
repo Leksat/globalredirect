@@ -138,10 +138,10 @@ class GlobalredirectSubscriber implements EventSubscriberInterface {
     if (!$this->config->get('frontpage_redirect') || !drupal_is_front_page()) {
       return;
     }
-
-    $request = $event->getRequest();
-    $request_uri = $request->getRequestUri();
-    if (!empty($request_uri)) {
+    $request_uri = $event->getRequest()->getPathInfo();
+    // url() returns the correct uri for the frontpage with prefixes.
+    $correct_front_page_uri = url('<front>');
+    if ($correct_front_page_uri != $request_uri) {
       $this->setResponse($event, '<front>');
     }
   }
@@ -152,15 +152,24 @@ class GlobalredirectSubscriber implements EventSubscriberInterface {
    * @param \Symfony\Component\HttpKernel\Event\GetResponseEvent $event
    */
   public function globalredirectNormalizeAliases(GetResponseEvent $event) {
-    if (!$this->config->get('normalize_aliases') || !$path = ltrim($event->getRequest()->getPathInfo(), '/')) {
+    // No redirect on:
+    // Frontpage, exception handling, request for exception pages (404, 403).
+    if (!$this->config->get('normalize_aliases') || drupal_is_front_page() || $event->getRequest()->attributes->has('exception') || $event->getRequest()->query->has('_exception_statuscode')) {
       return;
     }
+    // _current_path() returns the current path without language prefix.
+    // This because LanguageNegotiationUrl removed it.
+    $path = _current_path();
+    // System path contains the unaliased path, also no language prefix.
     $system_path = $this->aliasManager->getSystemPath($path);
+    // Now we generate the alias for the system path.
     $alias = $this->aliasManager->getPathAlias($system_path, $this->languageManager->getCurrentLanguage()->id);
-    // If the alias defined in the system is not the same as the one via which
-    // the page has been accessed do a redirect to the one defined in the
-    // system.
-    if ($alias != $path) {
+    // url() adds the language prefix again.
+    $alias_with_prefix = url($alias);
+    // We need the request uri to check against the alias.
+    $request_uri = $event->getRequest()->getPathInfo();
+    if ($alias_with_prefix != $request_uri) {
+      // The redirect is made without language prefix, it's added later.
       $this->setResponse($event, $system_path);
     }
   }
@@ -196,10 +205,15 @@ class GlobalredirectSubscriber implements EventSubscriberInterface {
     $url = Url::createFromPath($path);
     parse_str($request->getQueryString(), $query);
     $url->setOption('query', $query);
-    $url->setAbsolute(TRUE);
+    //$url->setAbsolute(TRUE);
 
     if ($this->redirectChecker->canRedirect($url->getRouteName(), $request)) {
-      $event->setResponse(new RedirectResponse($url->toString(), 301));
+      $headers = array(
+        // Not a permanent redirect.
+        'Cache-Control' => 'no-cache, must-revalidate, post-check=0, pre-check=0',
+      );
+      drupal_page_is_cacheable(FALSE);
+      $event->setResponse(new RedirectResponse($url->toString(), 301, $headers));
     }
   }
 
@@ -211,11 +225,11 @@ class GlobalredirectSubscriber implements EventSubscriberInterface {
     // Drupal\Core\EventSubscriber\PathSubscriber, because there is no need
     // to decode the incoming path, resolve language, etc. if the real path
     // information is in the query string.
-    $events[KernelEvents::REQUEST][] = array('globalredirectCleanUrls', 500);
-    $events[KernelEvents::REQUEST][] = array('globalredirectDeslash', 500);
-    $events[KernelEvents::REQUEST][] = array('globalredirectFrontPage', 500);
-    $events[KernelEvents::REQUEST][] = array('globalredirectNormalizeAliases', 500);
-    $events[KernelEvents::REQUEST][] = array('globalredirectForum', 500);
+    $events[KernelEvents::REQUEST][] = array('globalredirectCleanUrls', 200);
+    $events[KernelEvents::REQUEST][] = array('globalredirectDeslash', 200);
+    $events[KernelEvents::REQUEST][] = array('globalredirectFrontPage', 200);
+    $events[KernelEvents::REQUEST][] = array('globalredirectNormalizeAliases', 200);
+    $events[KernelEvents::REQUEST][] = array('globalredirectForum', 200);
     return $events;
   }
 }
