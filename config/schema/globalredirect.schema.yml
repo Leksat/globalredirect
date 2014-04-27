@@ -11,15 +11,12 @@ globalredirect.settings:
     trailing_zero:
       type: integer
       label: 'Remove Trailing Zero Argument'
-    menu_check:
+    access_check:
       type: boolean
       label: 'Menu Access Checking'
-    case_sensitive_urls:
+    normalize_aliases:
       type: boolean
       label: 'Case Sensitive URL Checking'
-    language_redirect:
-      type: boolean
-      label: 'Language Path Checking'
     canonical:
       type: boolean
       label: 'Add Canonical Link'

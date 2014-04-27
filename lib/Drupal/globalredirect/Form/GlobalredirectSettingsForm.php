@@ -44,44 +44,23 @@ class GlobalredirectSettingsForm extends ConfigFormBase {
 	  $form['settings']['nonclean_to_clean'] = array(
 	    '#type' => 'checkbox',
 	    '#title' => $this->t('Non-clean to Clean'),
-	    '#description' => $this->t('If enabled, this option will redirect from non-clean to clean URL (if Clean URL\'s are enabled). This will stop, for example, node 1  existing on both <code>example.com/node/1</code> AND <code>example.com?q=node/1</code>.'),
+	    '#description' => $this->t('If enabled, this option will redirect from non-clean to clean URL (if Clean URL\'s are enabled). This will stop, for example, node 1  existing on both <code>example.com/node/1</code> AND <code>example.com/index.php/node/1</code>.'),
 	    '#default_value' => $settings['nonclean_to_clean'],
 	  );
 
-	  $form['settings']['trailing_zero'] = array(
-	    '#type' => 'radios',
-	    '#title' => $this->t('Remove Trailing Zero Argument'),
-	    '#description' => $this->t('If enabled, any instance of "/0" will be trimmed from the right of the URL. This stops duplicate pages such as "taxonomy/term/1" and "taxonomy/term/1/0" where 0 is the default depth. There is an option of limiting this feature to taxonomy term pages ONLY or allowing it to effect any page. <strong>By default this feature is disabled to avoid any unexpected behavior. Also of note, the trailing /0 "depth modifier" was removed from Drupal 7.</strong>'),
-	    '#options' => array(
-	      0 => $this->t('Disabled'),
-	      1 => $this->t('Enabled for all pages'),
-	      2 => $this->t('Enabled for taxonomy term pages only'),
-	    ),
-	    '#default_value' => $settings['trailing_zero'],
-	  );
-
-	  $form['settings']['menu_check'] = array(
+	  $form['settings']['access_check'] = array(
 	    '#type' => 'checkbox',
-	    '#title' => $this->t('Menu Access Checking'),
-	    '#description' => $this->t('If enabled, the module will check the user has access to the page before redirecting. This helps to stop redirection on protected pages and avoids giving away <em>secret</em> URL\'s. <strong>By default this feature is disabled to avoid any unexpected behavior</strong>'),
-	    '#default_value' => $settings['menu_check'],
+	    '#title' => $this->t('Check access to the redirected page'),
+	    '#description' => $this->t('This helps to stop redirection on protected pages and avoids giving away <em>secret</em> URL\'s. <strong>By default this feature is disabled to avoid any unexpected behavior</strong>'),
+	    '#default_value' => $settings['access_check'],
 	  );
 
-	  $form['settings']['case_sensitive_urls'] = array(
+	  $form['settings']['normalize_aliases'] = array(
 	    '#type' => 'checkbox',
-	    '#title' => $this->t('Case Sensitive URL Checking'),
-	    '#description' => $this->t('If enabled, the module will compare the current URL to the alias stored in the system. If there are any differences in case then the user will be redirected to the correct URL.'),
-	    '#default_value' => $settings['case_sensitive_urls'],
+	    '#title' => $this->t('Normalize aliases'),
+	    '#description' => $this->t('Will check if for the given path an alias exists or if the used alias is in correct case and will redirect to the appropriate alias form.'),
+	    '#default_value' => $settings['normalize_aliases'],
 	  );
-
-
-	  $form['settings']['language_redirect'] = array(
-	    '#type' => 'checkbox',
-	    '#title' => $this->t('Language Path Checking'),
-	    '#description' => $this->t('If enabled, the module will check that the page being viewed matches the language in the URL or the system default. For example, viewing a French node while the site is in English will cause a redirect to the English node.'),
-	    '#default_value' => $settings['language_redirect'],
-	  );
-
 
 	  $form['settings']['canonical'] = array(
 	    '#type' => 'checkbox',
@@ -146,10 +125,8 @@ class GlobalredirectSettingsForm extends ConfigFormBase {
     $config
       ->set('deslash', $form_values['deslash'])
       ->set('nonclean_to_clean', $form_values['nonclean_to_clean'])
-      ->set('trailing_zero', $form_values['trailing_zero'])
-      ->set('menu_check', $form_values['menu_check'])
-      ->set('case_sensitive_urls', $form_values['case_sensitive_urls'])
-      ->set('language_redirect', $form_values['language_redirect'])
+      ->set('access_check', $form_values['access_check'])
+      ->set('normalize_aliases', $form_values['normalize_aliases'])
       ->set('canonical', $form_values['canonical'])
       ->set('content_location_header', $form_values['content_location_header'])
       ->set('term_path_handler', $form_values['term_path_handler'])
@@ -175,10 +152,8 @@ class GlobalredirectSettingsForm extends ConfigFormBase {
     $config
       ->set('deslash', $settingsDefault['deslash'])
       ->set('nonclean_to_clean', $settingsDefault['nonclean_to_clean'])
-      ->set('trailing_zero', $settingsDefault['trailing_zero'])
-      ->set('menu_check', $settingsDefault['menu_check'])
-      ->set('case_sensitive_urls', $settingsDefault['case_sensitive_urls'])
-      ->set('language_redirect', $settingsDefault['language_redirect'])
+      ->set('access_check', $settingsDefault['access_check'])
+      ->set('normalize_aliases', $settingsDefault['normalize_aliases'])
       ->set('canonical', $settingsDefault['canonical'])
       ->set('content_location_header', $settingsDefault['content_location_header'])
       ->set('term_path_handler', $settingsDefault['term_path_handler'])
@@ -200,10 +175,8 @@ class GlobalredirectSettingsForm extends ConfigFormBase {
     $defaults = array(
       'deslash' => 1,
       'nonclean_to_clean' => 1,
-      'trailing_zero' => 0,
-      'menu_check' => 0,
-      'case_sensitive_urls' => 1,
-      'language_redirect' => 0,
+      'access_check' => 0,
+      'normalize_aliases' => 1,
       'canonical' => 0,
       'content_location_header' => 0,
       'term_path_handler' => 1,

@@ -1,5 +1,9 @@
 services:
   globalredirect.subscriber:
     class: Drupal\globalredirect\EventSubscriber\GlobalredirectSubscriber
+    arguments: ['@config.factory', '@path.alias_manager', '@language_manager', '@module_handler', '@entity.manager', '@redirect.checker']
     tags:
       - { name: event_subscriber }
+  redirect.checker:
+    class: Drupal\globalredirect\RedirectChecker
+    arguments: ['@config.factory', '@access_manager', '@current_user', '@router.route_provider']

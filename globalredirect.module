@@ -15,16 +15,3 @@ function globalredirect_help($path, $arg) {
       return t('This module will do a 301 redirect for all nodes which have an alias but are not using that alias.');
   }
 }
-
-/**
- * Implements hook_menu().
- */
-function globalredirect_menu() {
-  $items = array();
-  $items['globalredirect_settings'] = array(
-    'title' => 'Global Redirect',
-    'description' => 'Choose which features you would like enabled for Global Redirect.',
-    'route_name' => 'globalredirect_settings',
-  );
-  return $items;
-}
