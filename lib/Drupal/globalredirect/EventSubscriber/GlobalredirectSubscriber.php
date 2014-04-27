@@ -202,7 +202,14 @@ class GlobalredirectSubscriber implements EventSubscriberInterface {
    */
   protected function setResponse(GetResponseEvent $event, $path) {
     $request = $event->getRequest();
-    $url = Url::createFromPath($path);
+    // For some path's (like files) there are not routes available, so just stop
+    // when this happens.
+    try {
+      $url = Url::createFromPath($path);
+    }
+    catch (MatchingRouteNotFoundException $e) {
+      return;
+    }
     parse_str($request->getQueryString(), $query);
     $url->setOption('query', $query);
     //$url->setAbsolute(TRUE);
