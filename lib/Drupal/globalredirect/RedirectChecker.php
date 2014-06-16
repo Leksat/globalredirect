@@ -65,6 +65,12 @@ class RedirectChecker {
    *   TRUE if access is granted.
    */
   public function canRedirect($route_name, Request $request) {
+
+    // We should never redirect the POST requests.
+    if ($request->getMethod() == 'POST') {
+      return;
+    }
+
     $do_redirect = TRUE;
 
     /** @var \Symfony\Component\Routing\Route $route */
